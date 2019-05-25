@@ -1,0 +1,92 @@
+{
+    "name": "@eventia/postgresql-eventstorage",
+    "version": "0.0.0",
+    "description": "PostgreSQL support for Eventia",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "files": [
+        "/dist"
+    ],
+    "scripts": {
+        "lint": "eslint --ext .ts \"./source/**\"",
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "clean": "rm -rf ./dist/*",
+        "build": "npm run lint && tsc --project .",
+        "prebuild": "npm run clean",
+        "release:patch": "npm version patch && git push --follow-tags",
+        "release:minor": "npm version minor && git push --follow-tags",
+        "release:major": "npm version major && git push --follow-tags",
+        "docker-create-volume": "docker volume create pgdata",
+        "docker-remove-volume": "docker volume rm pgdata",
+        "docker-postgresql": "docker run --name postgresql-node --rm -it -v pgdata:/var/lib/postgresql/data/ -e POSTGRES_USER=eventstore -e POSTGRES_PASSWORD=eventstore -p 5433:5432 postgres:11.3-alpine",
+        "docker-psql": "docker exec -ti postgresql-node psql -U eventstore eventstore"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/eventia-io/eventia-postgresql-eventstorage.git"
+    },
+    "keywords": [
+        "ddd",
+        "cqrs",
+        "event sourcing",
+        "services",
+        "microservices",
+        "typescript"
+    ],
+    "author": "Arturo Arévalo González",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/eventia-io/eventia-postgresql-eventstorage/issues"
+    },
+    "homepage": "https://github.com/eventia-io/eventia-postgresql-eventstorage#readme",
+    "jest": {
+        "moduleFileExtensions": [
+            "ts",
+            "js"
+        ],
+        "transform": {
+            "^.+\\.ts$": "ts-jest"
+        },
+        "globals": {
+            "ts-jest": {
+                "tsConfig": "tsconfig.json"
+            }
+        },
+        "testMatch": [
+            "test/**/*.+(spec|test).(ts|js)"
+        ],
+        "testEnvironment": "node",
+        "collectCoverageFrom": [
+            "source/**"
+        ],
+        "watchPathIgnorePatterns": [
+            "<rootDir>/node_modules/"
+        ],
+        "coverageThreshold": {
+            "global": {
+                "branches": 0,
+                "functions": 1,
+                "lines": 1,
+                "statements": 1
+            }
+        }
+    },
+    "devDependencies": {
+        "@types/jest": "^24.0.13",
+        "@types/node": "^12.0.2",
+        "@types/pg": "^7.4.14",
+        "@typescript-eslint/eslint-plugin": "^1.9.0",
+        "eslint": "^5.16.0",
+        "eslint-config-airbnb-base": "^13.1.0",
+        "eslint-plugin-import": "^2.17.2",
+        "nodemon": "^1.19.0",
+        "ts-jest": "^24.0.2",
+        "ts-node": "^8.1.0",
+        "typescript": "^3.4.5"
+    },
+    "dependencies": {
+        "@eventia/core": "0.0.2",
+        "pg": "^7.11.0",
+        "pg-cursor": "^2.0.0"
+    }
+}
