@@ -19,43 +19,55 @@ class PostgreSQLEventQueryFilter {
     ) { }
 
     public equal(value: {}): PostgreSQLEventQuery {
-        this.operator = "=";
-        this.pushValue(value);
+        if (value !== Infinity) {
+            this.operator = "=";
+            this.pushValue(value);
+        }
 
         return this.query;
     }
 
     public notEqual(value: {}): PostgreSQLEventQuery {
-        this.operator = "<>";
-        this.pushValue(value);
+        if (value !== Infinity) {
+            this.operator = "<>";
+            this.pushValue(value);
+        }
 
         return this.query;
     }
 
     public greater(value: {}): PostgreSQLEventQuery {
-        this.operator = ">";
-        this.pushValue(value);
+        if (value !== Infinity) {
+            this.operator = ">";
+            this.pushValue(value);
+        }
 
         return this.query;
     }
 
     public greaterEqual(value: {}): PostgreSQLEventQuery {
-        this.operator = ">=";
-        this.pushValue(value);
+        if (value !== Infinity) {
+            this.operator = ">=";
+            this.pushValue(value);
+        }
 
         return this.query;
     }
 
     public less(value: {}): PostgreSQLEventQuery {
-        this.operator = "<";
-        this.pushValue(value);
+        if (value !== Infinity) {
+            this.operator = "<";
+            this.pushValue(value);
+        }
 
         return this.query;
     }
 
     public lessEqual(value: {}): PostgreSQLEventQuery {
-        this.operator = "<=";
-        this.pushValue(value);
+        if (value !== Infinity) {
+            this.operator = "<=";
+            this.pushValue(value);
+        }
 
         return this.query;
     }
@@ -74,16 +86,14 @@ class PostgreSQLEventQueryFilter {
         sql.push(this.fieldName);
         sql.push(this.operator);
 
-        if (this.slots.length > 1) {
+        if (this.slots.length > 1 || this.operator === "in") {
             sql.push("(");
             sql.push(this.slots.map(slot => `$${slot}`).join(","));
             sql.push(")");
         } else if (this.slots.length === 1) {
             sql.push(`$${this.slots[0]}`);
         } else {
-            throw new Error(
-                `PostgreSQLEventQueryFilter operator "${this.operator}" on field ${this.fieldName} has no slots`
-            );
+            return "1=1";
         }
 
         return sql.join(" ");
@@ -195,8 +205,8 @@ export class PostgreSQLEventQuery {
         } else if (token instanceof PositionalTrackingToken) {
             this.position.greater(token.position);
         } else if (token instanceof BoundedTrackingToken) {
-            this.position.greater(token.lowerBound);
-            this.position.lessEqual(token.upperBound);
+            this.position.greater(token.lowerBound.position);
+            this.position.lessEqual(token.upperBound.position);
         } else if (token instanceof PayloadTrackingToken) {
             this.payloadType.in(Array.from(token.payloadTypes));
         } else if (token instanceof AggregateIdentifierTrackingToken) {

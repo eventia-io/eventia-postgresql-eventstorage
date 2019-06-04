@@ -1,7 +1,8 @@
 import { Pool, QueryConfig } from "pg";
 import {
     EventStorageEngine, DomainEventMessage, TrackingToken,
-    InfiniteStream, TrackedDomainEventMessage, Transaction, Logger, PositionalTrackingToken
+    InfiniteStream, TrackedDomainEventMessage, Transaction,
+    Logger, PositionalTrackingToken, LowerBoundTrackingToken
 } from "@eventia/core";
 
 import { PostgreSQLTransaction } from "./PostgreSQLTransaction";
@@ -42,6 +43,7 @@ export abstract class AbstractPostgreSQLEventStorageEngine implements EventStora
             await innerTransaction.execute(query);
             await innerTransaction.commit();
         } catch (error) {
+            this.logger.error(error);
             await innerTransaction.rollback();
             throw error;
         } finally {
@@ -53,7 +55,7 @@ export abstract class AbstractPostgreSQLEventStorageEngine implements EventStora
     }
 
     public async createHeadToken(): Promise<TrackingToken> {
-        return new PositionalTrackingToken(0);
+        return new LowerBoundTrackingToken(0);
     }
 
     public async createTailToken(): Promise<TrackingToken> {
@@ -138,11 +140,12 @@ export class PostgreSQLEventStorageEngine extends AbstractPostgreSQLEventStorage
 
         let n = 1;
         for (const event of events) {
-            sql.push(`($${n++}, $${n++}, $${n++}, $${n++}, $${n++}, $${n++})`);
+            sql.push(`($${n++}, $${n++}, $${n++}, $${n++}, $${n++}, $${n++}, $${n++})`);
             values.push(
                 event.identifier,
                 event.aggregateIdentifier,
                 event.sequenceNumber,
+                event.aggregateType,
                 event.payloadType,
                 event.payload,
                 event.metadata || {}
@@ -154,6 +157,7 @@ export class PostgreSQLEventStorageEngine extends AbstractPostgreSQLEventStorage
                 Id,
                 AggregateIdentifier,
                 SequenceNumber,
+                AggregateType,
                 PayloadType,
                 Payload,
                 Metadata

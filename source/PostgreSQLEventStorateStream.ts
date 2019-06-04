@@ -19,12 +19,15 @@ export class PostgreSQLEventStorageStream extends EventEmitter implements Infini
     protected closed: boolean;
     protected position: number;
 
+    protected readonly cursor: PostgresqlCursor<StoredEvent>;
+
     protected iterator: AsyncIterableIterator<StoredEvent>;
 
     public constructor(logger: Logger, pool: Pool, trackingToken: TrackingToken) {
         super();
 
         this.logger = logger;
+        this.pool = pool;
         this.trackingToken = trackingToken;
         this.closed = false;
         this.position = 0;
@@ -33,12 +36,11 @@ export class PostgreSQLEventStorageStream extends EventEmitter implements Infini
             .fromTrackingToken(this.logger, trackingToken)
             .build();
 
-        const cursor = new PostgresqlCursor<StoredEvent>(
+        this.cursor = new PostgresqlCursor<StoredEvent>(
+            this.logger,
             this.pool,
             query
         );
-
-        this.iterator = cursor[Symbol.asyncIterator]();
     }
 
     public [Symbol.asyncIterator](): AsyncIterableIterator<TrackedDomainEventMessage> {
@@ -46,6 +48,12 @@ export class PostgreSQLEventStorageStream extends EventEmitter implements Infini
     }
 
     public async next(): Promise<IteratorResult<TrackedDomainEventMessage>> {
+        if (this.iterator === undefined) {
+            const i = await this.cursor.execute();
+            // HACK: this.iterator = i[Symbol.asyncIterator]();
+            this.iterator = i[Symbol.asyncIterator]() as unknown as AsyncIterableIterator<StoredEvent>;
+        }
+
         const item = await this.iterator.next();
 
         if (item.value !== undefined) {
@@ -63,7 +71,7 @@ export class PostgreSQLEventStorageStream extends EventEmitter implements Infini
             return {
                 done: false,
                 value: new TrackedDomainEventMessage({
-                    identifier: storedEvent.identifier,
+                    identifier: storedEvent.id,
                     timestamp: storedEvent.logdate,
                     aggregateIdentifier: storedEvent.aggregateidentifier,
                     sequenceNumber: storedEvent.sequencenumber,
@@ -73,7 +81,7 @@ export class PostgreSQLEventStorageStream extends EventEmitter implements Infini
                     trackingToken: new PositionalTrackingToken(
                         parseInt(storedEvent.position, 10)
                     ),
-                    aggregateType: ""
+                    aggregateType: storedEvent.aggregatetype
                 })
             };
         }

@@ -6,13 +6,14 @@
  * between PostgreSQL bigint (64 bits) and Javascript (MAX_SAFE_INTEGER = 2^53 - 1).
  */
 interface StoredEvent {
-    identifier: string;
+    id: string;
     position: string;
     logdate: Date;
     tenantidentifier?: string;
     useridentifier?: string;
     aggregateidentifier: string;
     sequencenumber: number;
+    aggregatetype: string;
     payloadtype: string;
     payload: any;
     metadata: any;

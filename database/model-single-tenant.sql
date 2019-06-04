@@ -6,6 +6,7 @@ CREATE TABLE Events (
     LogDate             TIMESTAMPTZ NOT NULL DEFAULT now(),
     AggregateIdentifier UUID NOT NULL,
     SequenceNumber      INTEGER NOT NULL,
+    AggregateType       TEXT NOT NULL,
     PayloadType         TEXT NOT NULL,
     Payload             JSONB,
     Metadata            JSONB,

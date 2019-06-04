@@ -1,11 +1,13 @@
 import { Pool, PoolClient, QueryConfig } from "pg";
 import * as Cursor from "pg-cursor";
+import { Logger } from "@eventia/core";
 
 
 const defaultBatchSize = 500;
 
 export class PostgresqlCursor<T> {
 
+    private readonly logger: Logger;
     private readonly pool: Pool;
     private readonly query: QueryConfig;
     private readonly batchSize: number;
@@ -13,7 +15,8 @@ export class PostgresqlCursor<T> {
     private client?: PoolClient;
     private innerCursor?: Cursor;
 
-    public constructor(pool: Pool, query: QueryConfig, batchSize: number = defaultBatchSize) {
+    public constructor(logger: Logger, pool: Pool, query: QueryConfig, batchSize: number = defaultBatchSize) {
+        this.logger = logger;
         this.pool = pool;
         this.query = query;
         this.batchSize = batchSize;

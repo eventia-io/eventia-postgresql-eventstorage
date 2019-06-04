@@ -31,8 +31,9 @@ export class PostgreSQLTransaction implements Transaction {
         }
 
         const client = await this.getClient();
-        await client.query(statement);
+
         this.statementCount++;
+        await client.query(statement);
     }
 
     public async begin(): Promise<void> {
